@@ -3,11 +3,47 @@
 #include <list>
 using namespace std;
 
-
+// ================== FORWARD DECLARATIONS ==================
 class ServiceRequest;
+class Documents;
+class Payment;
+class Notification;
+class Citizen;
 class GovernmentOfficial;
+class Administrator;
+class Report;
 
-// ==================== DOCUMENTS CLASS ====================
+// ========================== REPORT ========================
+class Report {
+public:
+    int generatedByAdminID;
+    int reportID;
+    string reportType;
+    string generateDate;
+
+    bool generateReport() { cout << "generateReport : done\n"; return true; }
+    bool exportReport() { cout << "exportReport : done\n"; return true; }
+
+    // Bidirectional association with Administrator
+    Administrator* adminPtr = nullptr;  
+};
+
+// ======================= NOTIFICATION =====================
+class Notification {
+public:
+    int notificationID;
+    string type;
+    string message;
+    string sendDate;
+
+    bool sendNotification() { cout << "sendNotification : done\n"; return true; }
+    bool receiveNotification() { cout << "receiveNotification : done\n"; return true; }
+
+    // Bidirectional association with Citizen
+    Citizen* citizenPtr = nullptr;  
+};
+
+// ========================= DOCUMENTS ======================
 class Documents {
 public:
     int documentID;
@@ -16,338 +52,291 @@ public:
     string uploadDate;
     string verificationStatus;
 
-    bool uploadDocument() { cout << "uploadDocument done\n"; return true; }
-    bool verifyDocument() { cout << "verifyDocument done\n"; return true; }
+    bool uploadDocument() { cout << "uploadDocument : done\n"; return true; }
+    bool verifyDocument() { cout << "verifyDocument : done\n"; return true; }
+
+    // Composition: belongs to ServiceRequest
+    ServiceRequest* requestPtr = nullptr;  
+
+    // Bidirectional association with Citizen
+    Citizen* citizenPtr = nullptr;  
 };
 
-// ==================== PAYMENT CLASS ====================
+// ========================== PAYMENT =======================
 class Payment {
 public:
-    string applicationID;
+    int applicationID;
     int paymentID;
     double amount;
     string method;
-    string transactionId;
-    string paymentDate;
+    string status;
+    string transactionDate;
+
+    bool processPayment() { cout << "processPayment : done\n"; return true; }
+    bool confirmPayment() { cout << "confirmPayment : done\n"; return true; }
+    string generateReceipt() { cout << "generateReceipt : done\n"; return "receipt"; }
+
+    // Composition: belongs to ServiceRequest
+    ServiceRequest* requestPtr = nullptr;  
+};
+
+// ====================== SERVICE REQUEST ===================
+class ServiceRequest {
+public:
+    int citizenID;
+    int applicationID;
+    string applicationType;
+    string submissionDate;
     string status;
 
-    bool processPayment() { cout << "processPayment done\n"; return true; }
-    bool confirmPayment() { cout << "confirmPayment done\n"; return true; }
-    void generateReceipt() { cout << "generateReceipt done\n"; }
+    // Composition: ServiceRequest owns its payment
+    Payment payment;
+
+    // Composition: ServiceRequest owns documents
+    list<Documents> documents;
+
+    // Bidirectional association: GovernmentOfficial reviewing
+    GovernmentOfficial* officialPtr = nullptr;  
+
+    bool submitApplication() { cout << "submitApplication : done\n"; return true; }
+    bool getApplicationStatus() { cout << "getApplicationStatus : done\n"; return true; }
+    bool processRequest() { cout << "processRequest : done\n"; return true; }
+    bool verifyAllDocuments() { cout << "verifyAllDocuments : done\n"; return true; }
 };
 
-// ==================== NOTIFICATION CLASS ====================
-class Notification {
-public:
-    int notificationID;
-    string type;
-    string message;
-    string sendDate;
-
-    bool sendNotification() { cout << "sendNotification done\n"; return true; }
-    bool receiveNotification() { cout << "receiveNotification done\n"; return true; }
-};
-
-// ==================== REPORT CLASS ====================
-class Report {
-    
-private:
-    string generatedByAdminID;
-    list<Report*> Administrator;
-public:
-    int reportID;
-    string reportType;
-    string generatedDate;
-
-    bool generateReport() { cout << "generateReport done\n"; return true; }
-    bool exportReport() { cout << "exportReport done\n"; return true; }
-};
-
-// ==================== CITIZEN CLASS ====================
+// ========================== CITIZEN =======================
 class Citizen {
-private:
-    list<ServiceRequest*> serviceRequests;
-    list<Notification*> notifications;
 public:
     int citizenID;
     string fullName;
     string CNIC;
-    string dateOfBirth;
     string email;
+    string phone;
     string address;
-    string password;
 
-    bool registerCitizen() { cout << "registerCitizen done\n"; return true; }
-    bool login() { cout << "login done\n"; return true; }
-    bool updateProfile() { cout << "updateProfile done\n"; return true; }
-    int applyForCNIC() { cout << "applyForCNIC done\n"; return 1; }
-    int applyForPassport() { cout << "applyForPassport done\n"; return 1; }
-    bool uploadDocuments() { cout << "uploadDocuments done\n"; return true; }
-    int makePayment() { cout << "makePayment done\n"; return 12345; }
-    void viewReceipt() { cout << "viewReceipt done\n"; }
-    string trackApplication() { cout << "trackApplication done\n"; return "In Progress"; }
-    list<Notification*> receiveNotifications() { 
-        cout << "receiveNotifications done\n"; 
-        return notifications; 
-    }
+    // Aggregation: Citizen has multiple service requests
+    list<ServiceRequest*> serviceRequests;
+
+    // Bidirectional association: notifications
+    list<Notification*> notifications;
+
+    // Bidirectional association: documents
+    list<Documents*> documents;
+
+    bool registerCitizen() { cout << "registerCitizen : done\n"; return true; }
+    bool login() { cout << "login : done\n"; return true; }
+    bool applyForPassport() { cout << "applyForPassport : done\n"; return true; }
+    bool applyForNIC() { cout << "applyForNIC : done\n"; return true; }
+    bool uploadDocuments() { cout << "uploadDocuments : done\n"; return true; }
+    bool makePayment() { cout << "makePayment : done\n"; return true; }
+    string viewReceipt() { cout << "viewReceipt : done\n"; return "receipt"; }
+    string trackApplication() { cout << "trackApplication : done\n"; return "status"; }
+    list<string> receiveNotifications() { cout << "receiveNotifications : done\n"; return {}; }
 };
 
-// ==================== ADMINISTRATOR CLASS ====================
-class Administrator {
-private:
-    list<Citizen*> allCitizens;
-    list<GovernmentOfficial*> allOfficials;
-    list<Report*> systemReports;
-public:
-    string adminID;
-    string name;
-    string email;
-    string username;
-    string password;
-
-    bool manageCitizenAccounts() { cout << "manageCitizenAccounts done\n"; return true; }
-    bool manageOfficialAccounts() { cout << "manageOfficialAccounts done\n"; return true; }
-    bool assignRolesAndPermissions() { cout << "assignRolesAndPermissions done\n"; return true; }
-    string monitorSystemPerformance() { 
-        cout << "monitorSystemPerformance done\n"; 
-        return "System OK"; 
-    }
-    list<Report*> generateReports() { 
-        cout << "generateReports done\n"; 
-        return systemReports; 
-    }
-    bool exportReports() { cout << "exportReports done\n"; return true; }
-};
-
-// ==================== SERVICE REQUEST CLASS ====================
-class ServiceRequest {
-public:
-    string applicationID;
-    int citizenID;
-    string applicationType;
-    string submissionDate;
-    string status;
-    string remarks;
-
-    list<Documents> documents;
-    Payment payment;
-
-    int submitApplication() { cout << "submitApplication done\n"; return 1; }
-    bool attachDocuments() { cout << "attachDocuments done\n"; return true; }
-    bool updateStatus() { cout << "updateStatus done\n"; return true; }
-    bool assignToOfficial() { cout << "assignToOfficial done\n"; return true; }
-    bool processPayment() { cout << "processPayment done\n"; return true; }
-    bool verifyAllDocuments() { cout << "verifyAllDocuments done\n"; return true; }
-};
-
-// ==================== GOVERNMENT OFFICIAL CLASS ====================
+// =================== GOVERNMENT OFFICIAL ==================
 class GovernmentOfficial {
 public:
     int officialID;
     string name;
     string role;
     string department;
+    string email;
+    string password;
+
+    // Bidirectional association: reviews requests
+    list<ServiceRequest*> applications;
+
+    // Bidirectional association: verifies documents
+    list<Documents*> documentsToVerify;
+
+    bool login() { cout << "login : done\n"; return true; }
+    bool reviewDocuments() { cout << "reviewDocuments : done\n"; return true; }
+    bool approveApplication() { cout << "approveApplication : done\n"; return true; }
+    bool rejectApplication() { cout << "rejectApplication : done\n"; return true; }
+    bool requestAdditionalDocuments() { cout << "requestAdditionalDocuments : done\n"; return true; }
+    bool updateApplicationStatus() { cout << "updateApplicationStatus : done\n"; return true; }
+    bool manageWorkflow() { cout << "manageWorkflow : done\n"; return true; }
+    list<ServiceRequest*> viewApplications() { cout << "viewApplications : done\n"; return {}; }
+};
+
+// ====================== ADMINISTRATOR =====================
+class Administrator {
+public:
+    int adminID;
+    string name;
+    string email;
     string username;
     string password;
 
-    list<ServiceRequest*> assignedApplications;
-    list<Documents*> processedDocuments;
+    // Bidirectional associations
+    list<Citizen*> allCitizens;
+    list<GovernmentOfficial*> allOfficials;
+    list<Report*> systemReports;
+    list<ServiceRequest*> allRequests; // optional
 
-    bool login() { cout << "login done\n"; return true; }
-    list<ServiceRequest*> viewApplications() { 
-        cout << "viewApplications done\n"; 
-        return assignedApplications; 
-    }
-    bool verifyDocuments() { cout << "verifyDocuments done\n"; return true; }
-    bool approveApplication() { cout << "approveApplication done\n"; return true; }
-    bool rejectApplication() { cout << "rejectApplication done\n"; return true; }
-    bool requestAdditionalDocuments() { cout << "requestAdditionalDocuments done\n"; return true; }
-    bool updateApplicationStatus() { cout << "updateApplicationStatus done\n"; return true; }
-    bool manageWorkflow() { cout << "manageWorkflow done\n"; return true; }
+    bool manageCitizenAccounts() { cout << "manageCitizenAccounts : done\n"; return true; }
+    bool manageOfficialAccounts() { cout << "manageOfficialAccounts : done\n"; return true; }
+    bool assignRolesAndPermissions() { cout << "assignRolesAndPermissions : done\n"; return true; }
+    string monitorSystemUptime() { cout << "monitorSystemUptime : done\n"; return "uptime"; }
+    bool generateReports() { cout << "generateReports : done\n"; return true; }
+    bool exportReports() { cout << "exportReports : done\n"; return true; }
 };
 
-// ==================== MAIN MENU ====================
-int main() {
-    Documents d; 
-    Payment p; 
-    Notification n; 
-    Report rep;
-    Administrator a; 
-    GovernmentOfficial g; 
-    ServiceRequest r; 
-    Citizen c;
-
-    while (true) {
-        cout << "\n============ MAIN MENU ============\n";
-        cout << "1. Citizen\n";
-        cout << "2. GovernmentOfficial\n";
-        cout << "3. Administrator\n";
-        cout << "4. Notification\n";
-        cout << "5. Payment\n";
-        cout << "6. Documents\n";
-        cout << "7. ServiceRequest\n";
-        cout << "8. Report\n";
-        cout << "0. Exit\n";
-        cout << "Select a class: ";
-        
-        int cls;
-        cin >> cls;
-
-        if (cls == 0) break;
-        int method;
-
-        switch (cls) {
-        case 1:
-            cout << "\n--- Citizen Methods ---\n";
-            cout << "1. registerCitizen\n";
-            cout << "2. login\n";
-            cout << "3. updateProfile\n";
-            cout << "4. applyForCNIC\n";
-            cout << "5. applyForPassport\n";
-            cout << "6. uploadDocuments\n";
-            cout << "7. makePayment\n";
-            cout << "8. viewReceipt\n";
-            cout << "9. trackApplication\n";
-            cout << "10. receiveNotifications\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: c.registerCitizen(); break;
-                case 2: c.login(); break;
-                case 3: c.updateProfile(); break;
-                case 4: c.applyForCNIC(); break;
-                case 5: c.applyForPassport(); break;
-                case 6: c.uploadDocuments(); break;
-                case 7: c.makePayment(); break;
-                case 8: c.viewReceipt(); break;
-                case 9: c.trackApplication(); break;
-                case 10: c.receiveNotifications(); break;
-            }
-            break;
-
-        case 2:
-            cout << "\n--- GovernmentOfficial Methods ---\n";
-            cout << "1. login\n";
-            cout << "2. viewApplications\n";
-            cout << "3. verifyDocuments\n";
-            cout << "4. approveApplication\n";
-            cout << "5. rejectApplication\n";
-            cout << "6. requestAdditionalDocuments\n";
-            cout << "7. updateApplicationStatus\n";
-            cout << "8. manageWorkflow\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: g.login(); break;
-                case 2: g.viewApplications(); break;
-                case 3: g.verifyDocuments(); break;
-                case 4: g.approveApplication(); break;
-                case 5: g.rejectApplication(); break;
-                case 6: g.requestAdditionalDocuments(); break;
-                case 7: g.updateApplicationStatus(); break;
-                case 8: g.manageWorkflow(); break;
-            }
-            break;
-
-        case 3:
-            cout << "\n--- Administrator Methods ---\n";
-            cout << "1. manageCitizenAccounts\n";
-            cout << "2. manageOfficialAccounts\n";
-            cout << "3. assignRolesAndPermissions\n";
-            cout << "4. monitorSystemPerformance\n";
-            cout << "5. generateReports\n";
-            cout << "6. exportReports\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: a.manageCitizenAccounts(); break;
-                case 2: a.manageOfficialAccounts(); break;
-                case 3: a.assignRolesAndPermissions(); break;
-                case 4: a.monitorSystemPerformance(); break;
-                case 5: a.generateReports(); break;
-                case 6: a.exportReports(); break;
-            }
-            break;
-
-        case 4:
-            cout << "\n--- Notification Methods ---\n";
-            cout << "1. sendNotification\n";
-            cout << "2. receiveNotification\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: n.sendNotification(); break;
-                case 2: n.receiveNotification(); break;
-            }
-            break;
-
-        case 5:
-            cout << "\n--- Payment Methods ---\n";
-            cout << "1. processPayment\n";
-            cout << "2. confirmPayment\n";
-            cout << "3. generateReceipt\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: p.processPayment(); break;
-                case 2: p.confirmPayment(); break;
-                case 3: p.generateReceipt(); break;
-            }
-            break;
-
-        case 6:
-            cout << "\n--- Documents Methods ---\n";
-            cout << "1. uploadDocument\n";
-            cout << "2. verifyDocument\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: d.uploadDocument(); break;
-                case 2: d.verifyDocument(); break;
-            }
-            break;
-
-        case 7:
-            cout << "\n--- ServiceRequest Methods ---\n";
-            cout << "1. submitApplication\n";
-            cout << "2. attachDocuments\n";
-            cout << "3. updateStatus\n";
-            cout << "4. assignToOfficial\n";
-            cout << "5. processPayment\n";
-            cout << "6. verifyAllDocuments\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: r.submitApplication(); break;
-                case 2: r.attachDocuments(); break;
-                case 3: r.updateStatus(); break;
-                case 4: r.assignToOfficial(); break;
-                case 5: r.processPayment(); break;
-                case 6: r.verifyAllDocuments(); break;
-            }
-            break;
-
-        case 8:
-            cout << "\n--- Report Methods ---\n";
-            cout << "1. generateReport\n";
-            cout << "2. exportReport\n";
-            cout << "Select method: ";
-            cin >> method;
-
-            switch (method) {
-                case 1: rep.generateReport(); break;
-                case 2: rep.exportReport(); break;
-            }
-            break;
+// ============================ MENU ========================
+void showMethodsCitizen(Citizen &c) {
+    int choice;
+    do {
+        cout << "\nCITIZEN METHODS MENU:\n";
+        cout << "1. registerCitizen\n2. login\n3. applyForPassport\n4. applyForNIC\n5. uploadDocuments\n6. makePayment\n7. viewReceipt\n8. trackApplication\n9. receiveNotifications\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: c.registerCitizen(); break;
+            case 2: c.login(); break;
+            case 3: c.applyForPassport(); break;
+            case 4: c.applyForNIC(); break;
+            case 5: c.uploadDocuments(); break;
+            case 6: c.makePayment(); break;
+            case 7: c.viewReceipt(); break;
+            case 8: c.trackApplication(); break;
+            case 9: c.receiveNotifications(); break;
         }
-    }
+    } while(choice != 0);
+}
 
+void showMethodsServiceRequest(ServiceRequest &sr) {
+    int choice;
+    do {
+        cout << "\nSERVICE REQUEST METHODS MENU:\n";
+        cout << "1. submitApplication\n2. getApplicationStatus\n3. processRequest\n4. verifyAllDocuments\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: sr.submitApplication(); break;
+            case 2: sr.getApplicationStatus(); break;
+            case 3: sr.processRequest(); break;
+            case 4: sr.verifyAllDocuments(); break;
+        }
+    } while(choice != 0);
+}
+
+void showMethodsPayment(Payment &p) {
+    int choice;
+    do {
+        cout << "\nPAYMENT METHODS MENU:\n";
+        cout << "1. processPayment\n2. confirmPayment\n3. generateReceipt\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: p.processPayment(); break;
+            case 2: p.confirmPayment(); break;
+            case 3: p.generateReceipt(); break;
+        }
+    } while(choice != 0);
+}
+
+void showMethodsDocuments(Documents &d) {
+    int choice;
+    do {
+        cout << "\nDOCUMENTS METHODS MENU:\n";
+        cout << "1. uploadDocument\n2. verifyDocument\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: d.uploadDocument(); break;
+            case 2: d.verifyDocument(); break;
+        }
+    } while(choice != 0);
+}
+
+void showMethodsNotification(Notification &n) {
+    int choice;
+    do {
+        cout << "\nNOTIFICATION METHODS MENU:\n";
+        cout << "1. sendNotification\n2. receiveNotification\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: n.sendNotification(); break;
+            case 2: n.receiveNotification(); break;
+        }
+    } while(choice != 0);
+}
+
+void showMethodsGovernmentOfficial(GovernmentOfficial &g) {
+    int choice;
+    do {
+        cout << "\nGOVERNMENT OFFICIAL METHODS MENU:\n";
+        cout << "1. login\n2. reviewDocuments\n3. approveApplication\n4. rejectApplication\n5. requestAdditionalDocuments\n6. updateApplicationStatus\n7. manageWorkflow\n8. viewApplications\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: g.login(); break;
+            case 2: g.reviewDocuments(); break;
+            case 3: g.approveApplication(); break;
+            case 4: g.rejectApplication(); break;
+            case 5: g.requestAdditionalDocuments(); break;
+            case 6: g.updateApplicationStatus(); break;
+            case 7: g.manageWorkflow(); break;
+            case 8: g.viewApplications(); break;
+        }
+    } while(choice != 0);
+}
+
+void showMethodsAdministrator(Administrator &a) {
+    int choice;
+    do {
+        cout << "\nADMINISTRATOR METHODS MENU:\n";
+        cout << "1. manageCitizenAccounts\n2. manageOfficialAccounts\n3. assignRolesAndPermissions\n4. monitorSystemUptime\n5. generateReports\n6. exportReports\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: a.manageCitizenAccounts(); break;
+            case 2: a.manageOfficialAccounts(); break;
+            case 3: a.assignRolesAndPermissions(); break;
+            case 4: a.monitorSystemUptime(); break;
+            case 5: a.generateReports(); break;
+            case 6: a.exportReports(); break;
+        }
+    } while(choice != 0);
+}
+
+void showMethodsReport(Report &r) {
+    int choice;
+    do {
+        cout << "\nREPORT METHODS MENU:\n";
+        cout << "1. generateReport\n2. exportReport\n0. Back\n";
+        cout << "Enter choice: "; cin >> choice;
+        switch(choice) {
+            case 1: r.generateReport(); break;
+            case 2: r.exportReport(); break;
+        }
+    } while(choice != 0);
+}
+
+int main() {
+    Citizen citizen;
+    ServiceRequest sr;
+    Payment payment;
+    Documents doc;
+    Notification notif;
+    GovernmentOfficial official;
+    Administrator admin;
+    Report report;
+
+    int mainChoice;
+    do {
+        cout << "\n=== E-SERVICES PLATFORM MENU ===\n";
+        cout << "Select a class to interact:\n";
+        cout << "1. Citizen\n2. ServiceRequest\n3. Payment\n4. Documents\n5. Notification\n6. GovernmentOfficial\n7. Administrator\n8. Report\n0. Exit\n";
+        cout << "Enter choice: "; cin >> mainChoice;
+
+        switch(mainChoice) {
+            case 1: showMethodsCitizen(citizen); break;
+            case 2: showMethodsServiceRequest(sr); break;
+            case 3: showMethodsPayment(payment); break;
+            case 4: showMethodsDocuments(doc); break;
+            case 5: showMethodsNotification(notif); break;
+            case 6: showMethodsGovernmentOfficial(official); break;
+            case 7: showMethodsAdministrator(admin); break;
+            case 8: showMethodsReport(report); break;
+        }
+    } while(mainChoice != 0);
+
+    cout << "Exiting platform.\n";
     return 0;
 }
